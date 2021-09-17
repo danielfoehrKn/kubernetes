@@ -27,7 +27,7 @@ import (
 
 	"k8s.io/apimachinery/pkg/util/wait"
 
-	units "github.com/docker/go-units"
+	"github.com/docker/go-units"
 	libcontainercgroups "github.com/opencontainers/runc/libcontainer/cgroups"
 	cgroupfs "github.com/opencontainers/runc/libcontainer/cgroups/fs"
 	v1 "k8s.io/api/core/v1"
@@ -79,6 +79,8 @@ func (m *qosContainerManagerImpl) GetQOSContainersInfo() QOSContainersInfo {
 	return m.qosContainersInfo
 }
 
+// Seems to be where the allocatable on the root cgroup
+//  Wired, seems only to set CPU Shares &  hugepages
 func (m *qosContainerManagerImpl) Start(getNodeAllocatable func() v1.ResourceList, activePods ActivePodsFunc) error {
 	cm := m.cgroupManager
 	rootContainer := m.cgroupRoot
@@ -94,6 +96,7 @@ func (m *qosContainerManagerImpl) Start(getNodeAllocatable func() v1.ResourceLis
 	}
 
 	// Create containers for both qos classes
+	// create cgroup with name Burstable and BestEffort under the kubepods cgroup
 	for qosClass, containerName := range qosClasses {
 		resourceParameters := &ResourceConfig{}
 		// the BestEffort QoS class has a statically configured minShares value
@@ -112,6 +115,7 @@ func (m *qosContainerManagerImpl) Start(getNodeAllocatable func() v1.ResourceLis
 		m.setHugePagesUnbounded(containerConfig)
 
 		// check if it exists
+		// (kubepods/besteffort)  && (kubepods/burstable)
 		if !cm.Exists(containerName) {
 			if err := cm.Create(containerConfig); err != nil {
 				return fmt.Errorf("failed to create top level %v QOS cgroup : %v", qosClass, err)
@@ -223,6 +227,7 @@ func (m *qosContainerManagerImpl) getQoSMemoryRequests() map[v1.PodQOSClass]int6
 // setMemoryReserve sums the memory limits of all pods in a QOS class,
 // calculates QOS class memory limits, and set those limits in the
 // CgroupConfig for each QOS class.
+// this seems to be calculatting the reservations for the QoS class below kubepods
 func (m *qosContainerManagerImpl) setMemoryReserve(configs map[v1.PodQOSClass]*CgroupConfig, percentReserve int64) {
 	qosMemoryRequests := m.getQoSMemoryRequests()
 

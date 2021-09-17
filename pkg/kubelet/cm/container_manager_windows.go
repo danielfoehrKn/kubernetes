@@ -171,6 +171,10 @@ func (cm *containerManagerImpl) GetNodeAllocatableReservation() v1.ResourceList 
 	return result
 }
 
+func (cm *containerManagerImpl) UpdateResourceReservations(systemReserved, kubeReserved v1.ResourceList) error {
+	return nil
+}
+
 func (cm *containerManagerImpl) GetCapacity() v1.ResourceList {
 	return cm.capacity
 }

@@ -361,6 +361,8 @@ func MachineInfo(nodeName string,
 		}
 
 		// Set Allocatable.
+		// TODO: D060239 this is the code executed that actually calculates the Allocatable
+		// called via the defaultFunctions() from setNodeStatus()
 		if node.Status.Allocatable == nil {
 			node.Status.Allocatable = make(v1.ResourceList)
 		}
@@ -382,6 +384,9 @@ func MachineInfo(nodeName string,
 				// Negative Allocatable resources don't make sense.
 				value.Set(0)
 			}
+			// Here the allocatable is set to the node's status
+			// later it is compared to the existing state and if it changed, it will be included in the patch
+			// to the API server
 			node.Status.Allocatable[k] = value
 		}
 

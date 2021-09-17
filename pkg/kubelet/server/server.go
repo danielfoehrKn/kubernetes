@@ -39,10 +39,12 @@ import (
 	"github.com/google/cadvisor/metrics"
 	"google.golang.org/grpc"
 	"k8s.io/klog/v2"
+	"k8s.io/kubernetes/pkg/kubelet/apis/resourcereservations"
 	"k8s.io/kubernetes/pkg/kubelet/metrics/collectors"
 	"k8s.io/utils/clock"
 	netutils "k8s.io/utils/net"
 
+	resourcereservationsv1alpha1 "github.com/danielfoehrkn/resource-reservations-grpc/pkg/proto/gen/resource-reservations"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -202,6 +204,24 @@ func ListenAndServePodResources(socket string, podsProvider podresources.PodsPro
 		klog.ErrorS(err, "Failed to create listener for podResources endpoint")
 		os.Exit(1)
 	}
+
+	if err := server.Serve(l); err != nil {
+		klog.ErrorS(err, "Failed to serve")
+		os.Exit(1)
+	}
+}
+
+// ListenAndServeDynamicResourceReservations initializes a gRPC server to serve the dynamic resource reservations service
+func ListenAndServeDynamicResourceReservations(socket string, resourceReservationsUpdater resourcereservations.ResourceReservationsUpdater) {
+	server := grpc.NewServer()
+	resourcereservationsv1alpha1.RegisterResourceReservationsServer(server, resourcereservations.NewV1ResourceReservationServer(resourceReservationsUpdater))
+	l, err := util.CreateListener(socket)
+	if err != nil {
+		klog.ErrorS(err, "Failed to create listener for dynamic resource reservation endpoint")
+		os.Exit(1)
+	}
+
+	klog.Infof("DynamicResourceReservations: starting to serve")
 
 	if err := server.Serve(l); err != nil {
 		klog.ErrorS(err, "Failed to serve")

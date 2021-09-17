@@ -41,6 +41,9 @@ const (
 	// deprecated: 1.22
 	DynamicKubeletConfig featuregate.Feature = "DynamicKubeletConfig"
 
+	// owner: @danielfoehrKn
+	DynamicResourceReservations featuregate.Feature = "DynamicResourceReservations"
+
 	// owner: @pweil-
 	// alpha: v1.5
 	//
@@ -886,6 +889,7 @@ var defaultKubernetesFeatureGates = map[featuregate.Feature]featuregate.FeatureS
 	MemoryQoS:                                      {Default: false, PreRelease: featuregate.Alpha},
 	CPUManagerPolicyOptions:                        {Default: false, PreRelease: featuregate.Alpha},
 	ControllerManagerLeaderMigration:               {Default: true, PreRelease: featuregate.Beta},
+	DynamicResourceReservations: 					{Default: false, PreRelease: featuregate.Alpha},
 
 	// inherited features from generic apiserver, relisted here to get a conflict if it is changed
 	// unintentionally on either side:

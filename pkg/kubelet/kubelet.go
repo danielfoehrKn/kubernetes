@@ -67,6 +67,7 @@ import (
 	"k8s.io/kubernetes/pkg/features"
 	kubeletconfiginternal "k8s.io/kubernetes/pkg/kubelet/apis/config"
 	"k8s.io/kubernetes/pkg/kubelet/apis/podresources"
+	"k8s.io/kubernetes/pkg/kubelet/apis/resourcereservations"
 	"k8s.io/kubernetes/pkg/kubelet/cadvisor"
 	kubeletcertificate "k8s.io/kubernetes/pkg/kubelet/certificate"
 	"k8s.io/kubernetes/pkg/kubelet/cloudresource"
@@ -213,6 +214,7 @@ type Bootstrap interface {
 	ListenAndServe(kubeCfg *kubeletconfiginternal.KubeletConfiguration, tlsOptions *server.TLSOptions, auth server.AuthInterface)
 	ListenAndServeReadOnly(address net.IP, port uint)
 	ListenAndServePodResources()
+	ListenAndServeDynamicResourceReservations()
 	Run(<-chan kubetypes.PodUpdate)
 	RunOnce(<-chan kubetypes.PodUpdate) ([]RunPodResult, error)
 }
@@ -1469,12 +1471,21 @@ func (kl *Kubelet) Run(updates <-chan kubetypes.PodUpdate) {
 
 	if kl.kubeClient != nil {
 		// Start syncing node status immediately, this may set up things the runtime needs to run.
+		// TODO: d060239 this shows that the kubelet already invokes the syncNodeStatus() -> updateNodeStatus() -> tryUpdateNodeStatus() -> setNodeStatus() -> range kl.setNodeStatusFuncs
+		//  in the end executes nodeAllocatableReservationFunc func() v1.ResourceList, // typically Kubelet.containerManager.GetNodeAllocatableReservation
+		// executes every nodeStatusUpdateFrequency configured in the kubelet config (--node-status-update-frequency duration). Default every 10 seconds.
 		go wait.Until(kl.syncNodeStatus, kl.nodeStatusUpdateFrequency, wait.NeverStop)
 		go kl.fastStatusUpdateOnce()
 
 		// start syncing lease
 		go kl.nodeLeaseController.Run(wait.NeverStop)
 	}
+
+	// wait until container rutime is up
+	// as a dependency, setup
+	//  - cadavisor (needed by reserved resources to get capacity of machine)
+	// - eviction manager
+	//  - node including setting reserved resources via the container manager on the cgroups
 	go wait.Until(kl.updateRuntimeUp, 5*time.Second, wait.NeverStop)
 
 	// Set up iptables util rules
@@ -2383,6 +2394,16 @@ func (kl *Kubelet) ListenAndServePodResources() {
 		return
 	}
 	server.ListenAndServePodResources(socket, kl.podManager, kl.containerManager, kl.containerManager, kl.containerManager)
+}
+
+// ListenAndServeDynamicResourceReservations runs the kubelet dynamic resource reservations grpc service
+func (kl *Kubelet) ListenAndServeDynamicResourceReservations() {
+	socket, err := util.LocalEndpoint(kl.getDynamicResourceReservationsDir(), resourcereservations.Socket)
+	if err != nil {
+		klog.V(2).InfoS("Failed to get local endpoint for dynamic resource reservations endpoint", "err", err)
+		return
+	}
+	server.ListenAndServeDynamicResourceReservations(socket, kl.containerManager)
 }
 
 // Delete the eligible dead container instances in a pod. Depending on the configuration, the latest dead containers may be kept around.

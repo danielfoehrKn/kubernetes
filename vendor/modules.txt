@@ -226,6 +226,9 @@ github.com/coreos/go-systemd/v22/util
 github.com/cpuguy83/go-md2man/v2/md2man
 # github.com/cyphar/filepath-securejoin v0.2.2 => github.com/cyphar/filepath-securejoin v0.2.2
 github.com/cyphar/filepath-securejoin
+# github.com/danielfoehrkn/resource-reservations-grpc v0.0.0-20210917134434-9f45f21a91ed
+## explicit
+github.com/danielfoehrkn/resource-reservations-grpc/pkg/proto/gen/resource-reservations
 # github.com/davecgh/go-spew v1.1.1 => github.com/davecgh/go-spew v1.1.1
 ## explicit
 github.com/davecgh/go-spew/spew

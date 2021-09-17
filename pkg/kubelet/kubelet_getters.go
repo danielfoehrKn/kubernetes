@@ -164,6 +164,11 @@ func (kl *Kubelet) getPodResourcesDir() string {
 	return filepath.Join(kl.getRootDir(), config.DefaultKubeletPodResourcesDirName)
 }
 
+// getDynamicResourceReservationsDir returns the full path to the directory containing the dynamic resource reservations socket
+func (kl *Kubelet) getDynamicResourceReservationsDir() string {
+	return filepath.Join(kl.getRootDir(), config.DefaultKubeletDynamicResourceReservationsDirName)
+}
+
 // GetPods returns all pods bound to the kubelet and their spec, and the mirror
 // pods.
 func (kl *Kubelet) GetPods() []*v1.Pod {

@@ -27,5 +27,6 @@ const (
 	DefaultKubeletContainersDirName          = "containers"
 	DefaultKubeletPluginContainersDirName    = "plugin-containers"
 	DefaultKubeletPodResourcesDirName        = "pod-resources"
+	DefaultKubeletDynamicResourceReservationsDirName        = "dynamic-resource-reservations"
 	KubeletPluginsDirSELinuxLabel            = "system_u:object_r:container_file_t:s0"
 )

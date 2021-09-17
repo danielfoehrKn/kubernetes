@@ -74,6 +74,8 @@ func (e SMTAlignmentError) Type() string {
 // - RESERVED: A subset of the shared pool which is not exclusively
 //   allocatable. The membership of this pool is static for the lifetime of
 //   the Kubelet. The size of the reserved pool is
+// TODO: D050239 this needs to be update able at runtime
+
 //   ceil(systemreserved.cpu + kubereserved.cpu).
 //   Reserved CPUs are taken topologically starting with lowest-indexed
 //   physical core, as reported by cAdvisor.
@@ -128,6 +130,9 @@ func NewStaticPolicy(topology *topology.CPUTopology, numReservedCPUs int, reserv
 		//
 		// For example: Given a system with 8 CPUs available and HT enabled,
 		// if numReservedCPUs=2, then reserved={0,4}
+
+		// TODO: as numReservedCPUs can change dynamically, the specific reserved CPUs can also change
+		// affinity and  policy do not change
 		reserved, _ = takeByTopology(topology, allCPUs, numReservedCPUs)
 	}
 

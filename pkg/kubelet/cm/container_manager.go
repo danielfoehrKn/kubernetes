@@ -72,6 +72,9 @@ type ContainerManager interface {
 	// GetNodeAllocatableReservation returns the amount of compute resources that have to be reserved from scheduling.
 	GetNodeAllocatableReservation() v1.ResourceList
 
+	// UpdateResourceReservations updates the system- and kube-reserved settings which influence Node allocatable
+	UpdateResourceReservations(systemReserved, kubeReserved v1.ResourceList) error
+
 	// GetCapacity returns the amount of compute resources tracked by container manager available on the node.
 	GetCapacity() v1.ResourceList
 
@@ -131,6 +134,8 @@ type NodeConfig struct {
 	CgroupDriver          string
 	KubeletRootDir        string
 	ProtectKernelDefaults bool
+	// TODO: before I can dynamically change this, I need to find out who uses this
+	// Ideally, only the one updating the kubepods cgroup + reporting back the allocatable to the node
 	NodeAllocatableConfig
 	QOSReserved                             map[v1.ResourceName]int64
 	ExperimentalCPUManagerPolicy            string
@@ -146,10 +151,15 @@ type NodeConfig struct {
 }
 
 type NodeAllocatableConfig struct {
+	// default: kubepods
 	KubeReservedCgroupName   string
 	SystemReservedCgroupName string
 	ReservedSystemCPUs       cpuset.CPUSet
 	EnforceNodeAllocatable   sets.String
+	// TODO: before I can dynamically change this, I need to find out who uses this
+	// Ideally, only the one updating the kubepods cgroup + reporting back the allocatable to the node
+	// --> yes that how it seems
+	// needs to be protected by mutexes
 	KubeReserved             v1.ResourceList
 	SystemReserved           v1.ResourceList
 	HardEvictionThresholds   []evictionapi.Threshold

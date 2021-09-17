@@ -166,6 +166,7 @@ func NewManager(cpuPolicyName string, cpuPolicyOptions map[string]string, reconc
 		}
 		klog.InfoS("Detected CPU topology", "topology", topo)
 
+		// already contains the calculated NodeAllocatable
 		reservedCPUs, ok := nodeAllocatableReservation[v1.ResourceCPU]
 		if !ok {
 			// The static policy cannot initialize without this information.
@@ -184,6 +185,7 @@ func NewManager(cpuPolicyName string, cpuPolicyOptions map[string]string, reconc
 		// exclusively allocated.
 		reservedCPUsFloat := float64(reservedCPUs.MilliValue()) / 1000
 		numReservedCPUs := int(math.Ceil(reservedCPUsFloat))
+		// TODO: find a way to upate it at runtime
 		policy, err = NewStaticPolicy(topo, numReservedCPUs, specificCPUs, affinity, cpuPolicyOptions)
 		if err != nil {
 			return nil, fmt.Errorf("new static policy error: %w", err)
@@ -214,6 +216,8 @@ func (m *manager) Start(activePods ActivePodsFunc, sourcesReady config.SourcesRe
 	m.containerRuntime = containerRuntime
 	m.containerMap = initialContainers
 
+	// I think that loads the state form the filesystem e.g when kubelet exited
+	// the case that kube-reserved changed is already validated below in "m.policy.Start(m.state)"
 	stateImpl, err := state.NewCheckpointState(m.stateFileDirectory, cpuManagerStateFileName, m.policy.Name(), m.containerMap)
 	if err != nil {
 		klog.ErrorS(err, "Could not initialize checkpoint manager, please drain node and remove policy state file")

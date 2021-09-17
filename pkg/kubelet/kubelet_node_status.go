@@ -477,6 +477,7 @@ func (kl *Kubelet) updateNodeStatus() error {
 
 // tryUpdateNodeStatus tries to update node status to master if there is any
 // change or enough time passed from the last sync.
+// TODO: D060239 it this really the central place for node status updates? I need to update the Allocatable!
 func (kl *Kubelet) tryUpdateNodeStatus(tryNumber int) error {
 	// In large clusters, GET and PUT operations on Node objects coming
 	// from here are the majority of load on apiserver and etcd.
@@ -509,6 +510,7 @@ func (kl *Kubelet) tryUpdateNodeStatus(tryNumber int) error {
 		}
 	}
 
+	// TODO: this calls all the default setters including the one that calculates allocatable
 	kl.setNodeStatus(node)
 
 	now := kl.clock.Now()
@@ -580,6 +582,7 @@ func (kl *Kubelet) recordNodeSchedulableEvent(node *v1.Node) error {
 // TODO(madhusudancs): Simplify the logic for setting node conditions and
 // refactor the node status condition code out to a different file.
 func (kl *Kubelet) setNodeStatus(node *v1.Node) {
+	// TODO: D060239 setNodeStatusFuncs should already contain a function that updates the Allocatable if it changed!: see defaultNodeStatusFuncs() in same file
 	for i, f := range kl.setNodeStatusFuncs {
 		klog.V(5).InfoS("Setting node status condition code", "position", i, "node", klog.KObj(node))
 		if err := f(node); err != nil {
@@ -614,6 +617,8 @@ func (kl *Kubelet) defaultNodeStatusFuncs() []func(*v1.Node) error {
 	var setters []func(n *v1.Node) error
 	setters = append(setters,
 		nodestatus.NodeAddress(kl.nodeIPs, kl.nodeIPValidator, kl.hostname, kl.hostnameOverridden, kl.externalCloudProvider, kl.cloud, nodeAddressesFunc),
+		// TODO: D060239 this contains a function to update the NodeAllocatable on the node status
+		// these function are available when calling
 		nodestatus.MachineInfo(string(kl.nodeName), kl.maxPods, kl.podsPerCore, kl.GetCachedMachineInfo, kl.containerManager.GetCapacity,
 			kl.containerManager.GetDevicePluginResourceCapacity, kl.containerManager.GetNodeAllocatableReservation, kl.recordEvent),
 		nodestatus.VersionInfo(kl.cadvisor.VersionInfo, kl.containerRuntime.Type, kl.containerRuntime.Version),

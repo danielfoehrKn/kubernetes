@@ -74,6 +74,10 @@ func (cm *containerManagerStub) GetNodeAllocatableReservation() v1.ResourceList 
 	return nil
 }
 
+func (cm *containerManagerStub) UpdateResourceReservations(_, _ v1.ResourceList) error {
+	return nil
+}
+
 func (cm *containerManagerStub) GetCapacity() v1.ResourceList {
 	c := v1.ResourceList{
 		v1.ResourceEphemeralStorage: *resource.NewQuantity(

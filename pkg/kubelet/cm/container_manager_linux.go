@@ -134,6 +134,7 @@ type containerManagerImpl struct {
 	internalCapacity v1.ResourceList
 	// Absolute cgroupfs path to a cgroup that Kubelet needs to place all pods under.
 	// This path include a top level container for enforcing Node Allocatable.
+	// the cgroupRoot already is /kubepods!!! not root (/)
 	cgroupRoot CgroupName
 	// Event recorder interface.
 	recorder record.EventRecorder
@@ -214,6 +215,10 @@ func validateSystemRequirements(mountUtil mount.Interface) (features, error) {
 // TODO(vmarmol): Add limits to the system containers.
 // Takes the absolute name of the specified containers.
 // Empty container name disables use of the specified container.
+
+// DO60239: this alsready hands over the "nodeConfig" including the kube& system reserved read from the config file
+// this is already during startup of the kubelet
+// if I want to change that in the container manager, I probably even need to go one step higher (maybe not necessary as the only thing using it is the container manager)
 func NewContainerManager(mountUtil mount.Interface, cadvisorInterface cadvisor.Interface, nodeConfig NodeConfig, failSwapOn bool, devicePluginEnabled bool, recorder record.EventRecorder) (ContainerManager, error) {
 	subsystems, err := GetCgroupSubsystems()
 	if err != nil {
@@ -281,10 +286,12 @@ func NewContainerManager(mountUtil mount.Interface, cadvisorInterface cadvisor.I
 		klog.InfoS("Container manager verified user specified cgroup-root exists", "cgroupRoot", cgroupRoot)
 		// Include the top level cgroup for enforcing node allocatable into cgroup-root.
 		// This way, all sub modules can avoid having to understand the concept of node allocatable.
+		// TODO: this means that the cgroupRoot already is /kubepods!!! not root (/)
+		// cgroupRoot is default "/" as this is the root for the cgroup filesystem (e.g for an OS mounted actually at /sys/fs/cgroups)
 		cgroupRoot = NewCgroupName(cgroupRoot, defaultNodeAllocatableCgroupName)
 	}
 	klog.InfoS("Creating Container Manager object based on Node Config", "nodeConfig", nodeConfig)
-
+	// TODO: D060239 check that QOS does not need allocatable
 	qosContainerManager, err := NewQOSContainerManager(subsystems, cgroupRoot, nodeConfig, cgroupManager)
 	if err != nil {
 		return nil, err
@@ -293,6 +300,7 @@ func NewContainerManager(mountUtil mount.Interface, cadvisorInterface cadvisor.I
 	cm := &containerManagerImpl{
 		cadvisorInterface:   cadvisorInterface,
 		mountUtil:           mountUtil,
+		// nodeConfig from configuration file
 		NodeConfig:          nodeConfig,
 		subsystems:          subsystems,
 		cgroupManager:       cgroupManager,
@@ -337,6 +345,8 @@ func NewContainerManager(mountUtil mount.Interface, cadvisorInterface cadvisor.I
 			nodeConfig.ExperimentalCPUManagerReconcilePeriod,
 			machineInfo,
 			nodeConfig.NodeAllocatableConfig.ReservedSystemCPUs,
+			// TODO: D060239 4) also handed over here in a static fashion
+			// Do later
 			cm.GetNodeAllocatableReservation(),
 			nodeConfig.KubeletRootDir,
 			cm.topologyManager,
@@ -352,6 +362,7 @@ func NewContainerManager(mountUtil mount.Interface, cadvisorInterface cadvisor.I
 		cm.memoryManager, err = memorymanager.NewManager(
 			nodeConfig.ExperimentalMemoryManagerPolicy,
 			machineInfo,
+			// TODO: D060239 4) also handed over here in a static fashion
 			cm.GetNodeAllocatableReservation(),
 			nodeConfig.ExperimentalMemoryManagerReservedMemory,
 			nodeConfig.KubeletRootDir,
@@ -464,6 +475,7 @@ func setupKernelTunables(option KernelTunableBehavior) error {
 }
 
 func (cm *containerManagerImpl) setupNode(activePods ActivePodsFunc) error {
+	// checks if all the resource controller mounts are available under the root such as CPU, memory, ...
 	f, err := validateSystemRequirements(cm.mountUtil)
 	if err != nil {
 		return err
@@ -480,7 +492,9 @@ func (cm *containerManagerImpl) setupNode(activePods ActivePodsFunc) error {
 	}
 
 	// Setup top level qos containers only if CgroupsPerQOS flag is specified as true
+	// this is enabled per default
 	if cm.NodeConfig.CgroupsPerQOS {
+		// this will create the kubepods cgroup under /kubepods for each resource controller
 		if err := cm.createNodeAllocatableCgroups(); err != nil {
 			return err
 		}
@@ -648,6 +662,35 @@ func (cm *containerManagerImpl) Start(node *v1.Node,
 			cm.capacity[rName] = rCap
 		}
 	}
+
+	// if utilfeature.DefaultFeatureGate.Enabled(kubefeatures.DynamicResourceReservations) {
+	// 	fmt.Printf("DynamicResourceReservations feature gate enabled!")
+	//
+	// 	// for now, just every minute
+	// 	go wait.Until(func() {
+	// 		// later fetch from API
+	// 		// Alternatively:
+	// 		//  - push based by exposing UDS
+	// 		//  - fetch from URL / http API instead of UDS
+	// 		// - also consider having a one time option  to get bootstrap reservations only
+	//
+	// 		// IT ACTUALLY WORKED FLAWLESSLY!!!
+	// 		var kubeReserved = v1.ResourceList{
+	// 			v1.ResourceMemory: resource.MustParse("2G"),
+	// 			v1.ResourceCPU:    resource.MustParse("1"),
+	// 		}
+	// 		systemReserved := v1.ResourceList{
+	// 			v1.ResourceMemory: resource.MustParse("200Mi"),
+	// 		}
+	//
+	// 		if err := cm.UpdateResourceReservations(systemReserved, kubeReserved); err != nil {
+	// 			klog.Warningf("DynamicResourceReservations: failed: %v", err)
+	// 			return
+	// 		}
+	// 		klog.Infof("DynamicResourceReservations: successfully updated resource reservations")
+	// 	}, time.Minute, wait.NeverStop)
+	//
+	// }
 
 	// Ensure that node allocatable configuration is valid.
 	if err := cm.validateNodeAllocatable(); err != nil {

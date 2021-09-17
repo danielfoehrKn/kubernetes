@@ -106,6 +106,13 @@ func (cm *FakeContainerManager) GetNodeAllocatableReservation() v1.ResourceList 
 	return nil
 }
 
+func (cm *FakeContainerManager) UpdateResourceReservations(_, _ v1.ResourceList) error {
+	cm.Lock()
+	defer cm.Unlock()
+	cm.CalledFunctions = append(cm.CalledFunctions, "UpdateResourceReservations")
+	return nil
+}
+
 func (cm *FakeContainerManager) GetCapacity() v1.ResourceList {
 	cm.Lock()
 	defer cm.Unlock()

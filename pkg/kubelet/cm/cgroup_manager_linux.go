@@ -449,6 +449,8 @@ func (m *cgroupManagerImpl) Update(cgroupConfig *CgroupConfig) error {
 	}()
 
 	// Extract the cgroup resource parameters
+	// these are the  cgroup resources (memory Limit, CPU shares, ...)
+	// need to findthe place where thiis is  done for the kubepods cgroup
 	resourceConfig := cgroupConfig.ResourceParameters
 	resources := m.toResources(resourceConfig)
 
@@ -522,6 +524,7 @@ func (m *cgroupManagerImpl) Create(cgroupConfig *CgroupConfig) error {
 		return err
 	}
 
+	// This create the cgroup directory for each  resource subsystem!!!
 	// Apply(-1) is a hack to create the cgroup directories for each resource
 	// subsystem. The function [cgroups.Manager.apply()] applies cgroup
 	// configuration to the process with the specified pid.

@@ -318,6 +318,9 @@ func GetPodCgroupNameSuffix(podUID types.UID) string {
 func NodeAllocatableRoot(cgroupRoot string, cgroupsPerQOS bool, cgroupDriver string) string {
 	nodeAllocatableRoot := ParseCgroupfsToCgroupName(cgroupRoot)
 	if cgroupsPerQOS {
+		// root/kubepods
+		// Real cgroup path: /sys/fs/cgroup/memory/kubepods
+		// question: does "cgroupRoot" contain the resource controller?
 		nodeAllocatableRoot = NewCgroupName(nodeAllocatableRoot, defaultNodeAllocatableCgroupName)
 	}
 	if libcontainerCgroupManagerType(cgroupDriver) == libcontainerSystemd {
