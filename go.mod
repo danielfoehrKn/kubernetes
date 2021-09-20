@@ -30,7 +30,7 @@ require (
 	github.com/coreos/go-oidc v2.1.0+incompatible
 	github.com/coreos/go-systemd/v22 v22.3.2
 	github.com/cpuguy83/go-md2man/v2 v2.0.0
-	github.com/danielfoehrkn/resource-reservations-grpc v0.0.0-20210917134434-9f45f21a91ed
+	github.com/danielfoehrkn/resource-reservations-grpc v0.0.0-20210917152947-9f7c924bc07f
 	github.com/davecgh/go-spew v1.1.1
 	github.com/docker/distribution v2.7.1+incompatible
 	github.com/docker/docker v20.10.2+incompatible

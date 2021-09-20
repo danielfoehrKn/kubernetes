@@ -78,6 +78,10 @@ func (cm *containerManagerStub) UpdateResourceReservations(_, _ v1.ResourceList)
 	return nil
 }
 
+func (cm *containerManagerStub) GetResourceReservations() (systemReserved, kubeReserved v1.ResourceList) {
+	return nil, nil
+}
+
 func (cm *containerManagerStub) GetCapacity() v1.ResourceList {
 	c := v1.ResourceList{
 		v1.ResourceEphemeralStorage: *resource.NewQuantity(

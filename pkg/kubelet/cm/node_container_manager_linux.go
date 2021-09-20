@@ -165,7 +165,6 @@ func (cm *containerManagerImpl) enforceNodeAllocatableCgroups() error {
 	if nc.EnforceNodeAllocatable.Has(kubetypes.KubeReservedEnforcementKey) {
 		klog.V(2).InfoS("Enforcing kube reserved on cgroup", "cgroupName", nc.KubeReservedCgroupName, "limits", nc.KubeReserved)
 		// this actually sets the kube-reserved on the kubepods cgroup
-		// How is it that the root cgroup already contains  /kubepods, what  is in nc.KubeReservedCgroupName ?
 		if err := enforceExistingCgroup(cm.cgroupManager, cm.cgroupManager.CgroupName(nc.KubeReservedCgroupName), nc.KubeReserved); err != nil {
 			message := fmt.Sprintf("Failed to enforce Kube Reserved Cgroup Limits on %q: %v", nc.KubeReservedCgroupName, err)
 			cm.recorder.Event(nodeRef, v1.EventTypeWarning, events.FailedNodeAllocatableEnforcement, message)
@@ -306,6 +305,25 @@ func (cm *containerManagerImpl) GetNodeAllocatableReservation() v1.ResourceList 
 	return result
 }
 
+// TODO D060239: need to find all the places where the code reads from cm.NodeConfig.SystemReserved
+// and update it to add mutex protection in case the feature gate is enabled
+// TODO: is there a way to do that better? -> dont think so :(
+
+// GetResourceReservations gets the current resource reservations from the container managers internal NodeConfig
+// Returns the system-reserved and the kube-reserved v1.ResourceList as the second argument
+func (cm *containerManagerImpl) GetResourceReservations() (v1.ResourceList, v1.ResourceList) {
+	if !utilfeature.DefaultFeatureGate.Enabled(kubefeatures.DynamicResourceReservations) {
+		return cm.NodeConfig.SystemReserved, cm.NodeConfig.KubeReserved
+	}
+
+	// more sophisticated locking possible to enable concurrent reads if there are not writes.
+	// However, disregarded to reduce complexity with few expected concurrent reads and writes
+	// TODO D060239: revisit locking
+	cm.RLock()
+	defer cm.RUnlock()
+	return cm.NodeConfig.SystemReserved, cm.NodeConfig.KubeReserved
+}
+
 func (cm *containerManagerImpl) UpdateResourceReservations(systemReserved, kubeReserved v1.ResourceList) error {
 	allocatable := getNodeAllocatableAbsoluteImpl(cm.capacity, systemReserved, kubeReserved)
 
@@ -348,6 +366,12 @@ func (cm *containerManagerImpl) UpdateResourceReservations(systemReserved, kubeR
 		UID:       types.UID(cm.nodeInfo.Name),
 		Namespace: "",
 	}
+
+	// TODO: also need to update for alternative system reserved cgroup an alternative kube cgroup
+	// alternative kube-reserved: https://github.com/kubernetes/kubernetes/blob/66dc45a103bc9d75610d46a6b78e645bb2e6e4e3/pkg/kubelet/cm/node_container_manager_linux.go#L165
+	// System-reserved cgroup: https://github.com/kubernetes/kubernetes/blob/66dc45a103bc9d75610d46a6b78e645bb2e6e4e3/pkg/kubelet/cm/node_container_manager_linux.go#L142
+	// Also adds the `memoryMin` if the MemoryQOS is enabled
+	// https://github.com/kubernetes/kubernetes/blob/66dc45a103bc9d75610d46a6b78e645bb2e6e4e3/pkg/kubelet/cm/node_container_manager_linux.go#L185
 
 	fmt.Printf("DynamicResourceReservations: attempting to enforce updated Node Allocatable")
 	err := cm.cgroupManager.Update(cgroupConfig)

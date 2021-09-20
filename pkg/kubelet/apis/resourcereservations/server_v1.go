@@ -29,12 +29,14 @@ import (
 // ReservationsServer implements ReservationsServer
 type ReservationsServer struct {
 	updater ResourceReservationsUpdater
+	getter ResourceReservationsGetter
 }
 
 // NewV1ResourceReservationServer returns a ResourceReservationsServer which updates kubelet resource requests
-func NewV1ResourceReservationServer(updater ResourceReservationsUpdater) resourcereservationsv1alpha1.ResourceReservationsServer{
+func NewV1ResourceReservationServer(getter ResourceReservationsGetter, updater ResourceReservationsUpdater) resourcereservationsv1alpha1.ResourceReservationsServer{
 	return &ReservationsServer{
 		updater: updater,
+		getter: getter,
 	}
 }
 
@@ -59,6 +61,14 @@ func (s *ReservationsServer) UpdateResourceReservations(ctx context.Context, req
 
 	klog.Infof("DynamicResourceReservations: successfully updated resource reservations")
 
-	// TODO: possibly add error message if validation failed
 	return &resourcereservationsv1alpha1.UpdateResourceReservationsResponse{}, nil
+}
+
+func (s *ReservationsServer) GetResourceReservations(ctx context.Context, request *resourcereservationsv1alpha1.GetResourceReservationsRequest) (*resourcereservationsv1alpha1.GetResourceReservationsResponse, error) {
+	systemReserved, kubeReserved := s.getter.GetResourceReservations()
+
+	return &resourcereservationsv1alpha1.GetResourceReservationsResponse{
+		SystemReserved: systemReserved,
+		KubeReserved:   kubeReserved,
+	}, nil
 }

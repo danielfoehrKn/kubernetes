@@ -75,6 +75,10 @@ type ContainerManager interface {
 	// UpdateResourceReservations updates the system- and kube-reserved settings which influence Node allocatable
 	UpdateResourceReservations(systemReserved, kubeReserved v1.ResourceList) error
 
+	// GetResourceReservations gets the current resource reservations from the container managers internal NodeConfig
+	// Returns the system-reserved and the kube-reserved v1.ResourceList as the second argument
+	GetResourceReservations() (systemReserved, kubeReserved v1.ResourceList)
+
 	// GetCapacity returns the amount of compute resources tracked by container manager available on the node.
 	GetCapacity() v1.ResourceList
 

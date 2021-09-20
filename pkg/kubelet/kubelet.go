@@ -2403,7 +2403,7 @@ func (kl *Kubelet) ListenAndServeDynamicResourceReservations() {
 		klog.V(2).InfoS("Failed to get local endpoint for dynamic resource reservations endpoint", "err", err)
 		return
 	}
-	server.ListenAndServeDynamicResourceReservations(socket, kl.containerManager)
+	server.ListenAndServeDynamicResourceReservations(socket, kl.containerManager, kl.containerManager)
 }
 
 // Delete the eligible dead container instances in a pod. Depending on the configuration, the latest dead containers may be kept around.

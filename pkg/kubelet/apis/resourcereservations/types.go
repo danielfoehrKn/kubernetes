@@ -20,8 +20,18 @@ import (
 	"k8s.io/api/core/v1"
 )
 
+// TODO: do we really need that updater interface?
+// we already hand over the whole container manager already need for the GetResourceReservations()
+
 // ResourceReservationsUpdater knows how to update resource reservations
 type ResourceReservationsUpdater interface {
 	// UpdateResourceReservations updates the system- and kube-reserved settings which influence Node allocatable
 	UpdateResourceReservations(systemReserved, kubeReserved v1.ResourceList) error
+}
+
+// // ResourceReservationsUpdater knows how to get the current resource reservations
+type ResourceReservationsGetter interface {
+	// GetResourceReservations gets the current resource reservations from the container managers internal NodeConfig
+	// Returns the system-reserved and the kube-reserved v1.ResourceList as the second argument
+	GetResourceReservations() (v1.ResourceList, v1.ResourceList)
 }

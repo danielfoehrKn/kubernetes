@@ -212,9 +212,9 @@ func ListenAndServePodResources(socket string, podsProvider podresources.PodsPro
 }
 
 // ListenAndServeDynamicResourceReservations initializes a gRPC server to serve the dynamic resource reservations service
-func ListenAndServeDynamicResourceReservations(socket string, resourceReservationsUpdater resourcereservations.ResourceReservationsUpdater) {
+func ListenAndServeDynamicResourceReservations(socket string, resourceReservationsGetter resourcereservations.ResourceReservationsGetter, resourceReservationsUpdater resourcereservations.ResourceReservationsUpdater) {
 	server := grpc.NewServer()
-	resourcereservationsv1alpha1.RegisterResourceReservationsServer(server, resourcereservations.NewV1ResourceReservationServer(resourceReservationsUpdater))
+	resourcereservationsv1alpha1.RegisterResourceReservationsServer(server, resourcereservations.NewV1ResourceReservationServer(resourceReservationsGetter, resourceReservationsUpdater))
 	l, err := util.CreateListener(socket)
 	if err != nil {
 		klog.ErrorS(err, "Failed to create listener for dynamic resource reservation endpoint")

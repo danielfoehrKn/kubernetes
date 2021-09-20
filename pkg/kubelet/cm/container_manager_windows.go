@@ -171,8 +171,14 @@ func (cm *containerManagerImpl) GetNodeAllocatableReservation() v1.ResourceList 
 	return result
 }
 
+// TODO D060239: add code for windows
 func (cm *containerManagerImpl) UpdateResourceReservations(systemReserved, kubeReserved v1.ResourceList) error {
 	return nil
+}
+
+// TODO D060239: add code for windows
+func (cm *containerManagerImpl) GetResourceReservations() (systemReserved, kubeReserved v1.ResourceList) {
+	return nil, nil
 }
 
 func (cm *containerManagerImpl) GetCapacity() v1.ResourceList {

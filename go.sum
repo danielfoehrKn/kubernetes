@@ -130,6 +130,8 @@ github.com/cyphar/filepath-securejoin v0.2.2 h1:jCwT2GTP+PY5nBz3c/YL5PAIbusElVrP
 github.com/cyphar/filepath-securejoin v0.2.2/go.mod h1:FpkQEhXnPnOthhzymB7CGsFk2G9VLXONKD9G7QGMM+4=
 github.com/danielfoehrkn/resource-reservations-grpc v0.0.0-20210917134434-9f45f21a91ed h1:SfBeMT95tpVn/7d2Ggoiq0z4CYN7QY8tKYqAEi+BVXs=
 github.com/danielfoehrkn/resource-reservations-grpc v0.0.0-20210917134434-9f45f21a91ed/go.mod h1:pl9Kts5mF87jmNQglPHQIDyD8r/cAdyoYaXKMDHz+m8=
+github.com/danielfoehrkn/resource-reservations-grpc v0.0.0-20210917152947-9f7c924bc07f h1:zC1biAvrtS2W8bkCy3P2th/89mcfNChFNUfVWf1l52U=
+github.com/danielfoehrkn/resource-reservations-grpc v0.0.0-20210917152947-9f7c924bc07f/go.mod h1:AkbIzGSxLKpWzRX6yov5SW9kQHTQJzH6W0EoIODYWfE=
 github.com/davecgh/go-spew v1.1.1 h1:vj9j/u1bqnvCEfJOwUhtlOARqs3+rkHYY13jYWTU97c=
 github.com/davecgh/go-spew v1.1.1/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
 github.com/daviddengcn/go-colortext v0.0.0-20160507010035-511bcaf42ccd h1:uVsMphB1eRx7xB1njzL3fuMdWRN8HtVzoUOItHMwv5c=
