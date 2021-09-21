@@ -113,6 +113,13 @@ func (cm *FakeContainerManager) UpdateResourceReservations(_, _ v1.ResourceList)
 	return nil
 }
 
+func (cm *FakeContainerManager) GetResourceReservations() (v1.ResourceList, v1.ResourceList) {
+	cm.Lock()
+	defer cm.Unlock()
+	cm.CalledFunctions = append(cm.CalledFunctions, "GetResourceReservations")
+	return v1.ResourceList{}, v1.ResourceList{}
+}
+
 func (cm *FakeContainerManager) GetCapacity() v1.ResourceList {
 	cm.Lock()
 	defer cm.Unlock()

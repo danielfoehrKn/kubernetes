@@ -105,25 +105,6 @@ func (cm *containerManagerImpl) enforceNodeAllocatableCgroups() error {
 	// Until evictions happen retry cgroup updates.
 	// Update limits on non root cgroup-root to be safe since the default limits for CPU can be too low.
 	// Check if cgroupRoot is set to a non-empty value (empty would be the root container)
-
-	// TODO: Two things to update
-	// 0) Add a periodic task that fetches & updates the kube reserved
-	//    - should update cm.NodeConfig.KubeReserved
-	//    - can be done like here: https://github.com/kubernetes/kubernetes/blob/481cf6fbe753b9eb2a47ced179211206b0a99540/pkg/kubelet/cm/container_manager_linux.go#L543
-	// 1)  update the setter that is used to calculate the Node status's Allocatable (requested peridoically every 10s)
-	//     - should use mutex as multiple threads
-	//     -> it is just down in the same file: https://github.com/kubernetes/kubernetes/blob/481cf6fbe753b9eb2a47ced179211206b0a99540/pkg/kubelet/cm/node_container_manager_linux.go#L228
-	// 2) Update below function that resets the kubepods cgroup limits every one minute back to the inital config in "cgroupConfig"
-	//    - instead  of the static "cgroupConfig" it should be calculated each time based on "cm.NodeConfig.KubeReserved"
-	//       - just call cm.getNodeAllocatableInternalAbsolute() again with mutex to pass into "getCgroupConfig(nodeAllocatable)"
-	//    - the enforceNodeAllocatableCgroups() is only called once during the kubelet startup in "setupNode()"
-	// 3) Also needs to be done for --system-reserved-cgroup and  --kube-reserved-cgroup below
-	//  - however, I do not get why that is not done  periodically like for the kubepods cgroup
-	// 4) What about the eviction manager? Def. also influenced by new kube-reserved
-	// 5) Update the static allocatables handed over dduring setupNode() to
-	//  - MemoryManager feature gate: https://github.com/kubernetes/kubernetes/blob/481cf6fbe753b9eb2a47ced179211206b0a99540/pkg/kubelet/cm/container_manager_linux.go#L355
-	//  - CPUManager feature gate: https://github.com/kubernetes/kubernetes/blob/481cf6fbe753b9eb2a47ced179211206b0a99540/pkg/kubelet/cm/container_manager_linux.go#L340
-	//   --> Do that in a later step (quite some work with all the testing)!
 	if len(cm.cgroupRoot) > 0 {
 		go func() {
 			for {
@@ -142,31 +123,18 @@ func (cm *containerManagerImpl) enforceNodeAllocatableCgroups() error {
 	if nc.EnforceNodeAllocatable.Has(kubetypes.SystemReservedEnforcementKey) {
 		klog.V(2).InfoS("Enforcing system reserved on cgroup", "cgroupName", nc.SystemReservedCgroupName, "limits", nc.SystemReserved)
 		if err := enforceExistingCgroup(cm.cgroupManager, cm.cgroupManager.CgroupName(nc.SystemReservedCgroupName), nc.SystemReserved); err != nil {
-			message := fmt.Sprintf("Failed to enforce System Reserved Cgroup Limits on %q: %v", nc.SystemReservedCgroupName, err)
+			message := fmt.Sprintf("Failed to initially enforce System Reserved Cgroup Limits on %q: %v", nc.SystemReservedCgroupName, err)
 			cm.recorder.Event(nodeRef, v1.EventTypeWarning, events.FailedNodeAllocatableEnforcement, message)
 			return fmt.Errorf(message)
 		}
 		cm.recorder.Eventf(nodeRef, v1.EventTypeNormal, events.SuccessfulNodeAllocatableEnforcement, "Updated limits on system reserved cgroup %v", nc.SystemReservedCgroupName)
 	}
 
-	// This is not triggered on my Shoot cluster
-	// YES! Because gardener does not configure a seperate cgroup for the kubernetes daemons via --kube-reserved-cgroup (all under system.slice)
-
-	// +..systemreserved or system.slice (Specified via `--system-reserved-cgroup`; `SystemReserved` enforced here *optionally* by kubelet)
-	// .        .    .tasks(sshd,udev,etc)
-	// +..podruntime or podruntime.slice (Specified via `--kube-reserved-cgroup`; `KubeReserved` enforced here *optionally* by kubelet)
-	// .	 +..kubelet
-	// .	 .   .tasks(kubelet)
-	// .	 +..runtime
-	// .	     .tasks(docker-engine, containerd)
-	// .
-	// +..kubepods or kubepods.slice (Node Allocatable enforced here by Kubelet)
-	// contains values from --kube-reserved-cgroup which is empty in Gardener case
 	if nc.EnforceNodeAllocatable.Has(kubetypes.KubeReservedEnforcementKey) {
 		klog.V(2).InfoS("Enforcing kube reserved on cgroup", "cgroupName", nc.KubeReservedCgroupName, "limits", nc.KubeReserved)
 		// this actually sets the kube-reserved on the kubepods cgroup
 		if err := enforceExistingCgroup(cm.cgroupManager, cm.cgroupManager.CgroupName(nc.KubeReservedCgroupName), nc.KubeReserved); err != nil {
-			message := fmt.Sprintf("Failed to enforce Kube Reserved Cgroup Limits on %q: %v", nc.KubeReservedCgroupName, err)
+			message := fmt.Sprintf("Failed to initially enforce Kube Reserved Cgroup Limits on %q: %v", nc.KubeReservedCgroupName, err)
 			cm.recorder.Event(nodeRef, v1.EventTypeWarning, events.FailedNodeAllocatableEnforcement, message)
 			return fmt.Errorf(message)
 		}
@@ -241,10 +209,8 @@ func (cm *containerManagerImpl) GetNodeAllocatableAbsolute() v1.ResourceList {
 }
 
 func (cm *containerManagerImpl) getNodeAllocatableAbsoluteImpl(capacity v1.ResourceList) v1.ResourceList {
-	cm.RLock()
-	defer cm.RUnlock()
-
-	return getNodeAllocatableAbsoluteImpl(capacity, cm.NodeConfig.SystemReserved, cm.NodeConfig.KubeReserved)
+	systemReserved, kubeReserved := cm.GetResourceReservations()
+	return getNodeAllocatableAbsoluteImpl(capacity, systemReserved, kubeReserved)
 }
 
 // getNodeAllocatableAbsoluteImpl returns the absolute value of Node Allocatable (without eviction threashold)
@@ -279,21 +245,17 @@ func (cm *containerManagerImpl) getNodeAllocatableInternalAbsolute() v1.Resource
 // GetNodeAllocatableReservation returns amount of compute or storage resource that have to be reserved on this node from scheduling.
 // TODO D060239: This is the setter function called during the periodic sync of the node status !!!
 // from  here: https://github.com/kubernetes/kubernetes/blob/0cd75e8fec62a2531637e80bb950ac9983cac1b0/pkg/kubelet/nodestatus/setters.go#L375
-//  calculate the desired Node Allocatable
-// ADJUSTING THIS DYNAMICALLY WILL CAUSE THE NODE STATUS TO BE UPDATED!
 func (cm *containerManagerImpl) GetNodeAllocatableReservation() v1.ResourceList {
-	cm.RLock()
-	defer cm.RUnlock()
-
+	systemReserved, kubeReserved := cm.GetResourceReservations()
 	evictionReservation := hardEvictionReservation(cm.HardEvictionThresholds, cm.capacity)
 	result := make(v1.ResourceList)
 	for k := range cm.capacity {
 		value := resource.NewQuantity(0, resource.DecimalSI)
-		if cm.NodeConfig.SystemReserved != nil {
-			value.Add(cm.NodeConfig.SystemReserved[k])
+		if systemReserved != nil {
+			value.Add(systemReserved[k])
 		}
-		if cm.NodeConfig.KubeReserved != nil {
-			value.Add(cm.NodeConfig.KubeReserved[k])
+		if kubeReserved != nil {
+			value.Add(kubeReserved[k])
 		}
 		if evictionReservation != nil {
 			value.Add(evictionReservation[k])
@@ -304,10 +266,6 @@ func (cm *containerManagerImpl) GetNodeAllocatableReservation() v1.ResourceList 
 	}
 	return result
 }
-
-// TODO D060239: need to find all the places where the code reads from cm.NodeConfig.SystemReserved
-// and update it to add mutex protection in case the feature gate is enabled
-// TODO: is there a way to do that better? -> dont think so :(
 
 // GetResourceReservations gets the current resource reservations from the container managers internal NodeConfig
 // Returns the system-reserved and the kube-reserved v1.ResourceList as the second argument
@@ -324,6 +282,20 @@ func (cm *containerManagerImpl) GetResourceReservations() (v1.ResourceList, v1.R
 	return cm.NodeConfig.SystemReserved, cm.NodeConfig.KubeReserved
 }
 
+// TODO: Eviction  Manager + Memory Manager + CPU manager all use kube-reserved statically
+//  - MemoryManager feature gate: https://github.com/kubernetes/kubernetes/blob/481cf6fbe753b9eb2a47ced179211206b0a99540/pkg/kubelet/cm/container_manager_linux.go#L355
+//  - CPUManager feature gate: https://github.com/kubernetes/kubernetes/blob/481cf6fbe753b9eb2a47ced179211206b0a99540/pkg/kubelet/cm/container_manager_linux.go#L340
+//  -  what about the initially applied kube-reserved configuration from the file?
+//     -  just disallow setting values (maybe too disruptive). Problem: restart of kubelet will override!
+
+// TODO: calling grpc service getting:
+// W0921 22:12:40.489299   21815 http2_server.go:500] [transport] transport: http2Server.HandleStreams failed to
+// read frame: read unix /var/lib/kubelet/dynamic-resource-reservations/1796136899->@: read:
+// connection reset by peer
+
+
+// UpdateResourceReservations updates and enforces the given system- and kube-reserved settings
+//  will only update the specified fields in resource reservations (do not update not-specified field to 0)
 func (cm *containerManagerImpl) UpdateResourceReservations(systemReserved, kubeReserved v1.ResourceList) error {
 	allocatable := getNodeAllocatableAbsoluteImpl(cm.capacity, systemReserved, kubeReserved)
 
@@ -334,12 +306,6 @@ func (cm *containerManagerImpl) UpdateResourceReservations(systemReserved, kubeR
 
 	// TODO: validate if it actually changing anything
 	// ---> reduce Event noise!!!
-
-
-	cm.RLock()
-	defer cm.RUnlock()
-	cm.NodeConfig.SystemReserved = systemReserved
-	cm.NodeConfig.KubeReserved = kubeReserved
 
 	if !cm.CgroupsPerQOS {
 		return fmt.Errorf("cannot update resource reservations when cgroups per QOS is not enabled")
@@ -353,8 +319,19 @@ func (cm *containerManagerImpl) UpdateResourceReservations(systemReserved, kubeR
 		return fmt.Errorf("cgroup root %q does not exit", cm.cgroupRoot)
 	}
 
+	cm.RLock()
+	defer cm.RUnlock()
+
+	for resourceName, resourceValue := range systemReserved {
+		cm.NodeConfig.SystemReserved[resourceName]  = resourceValue
+	}
+
+	for resourceName, resourceValue := range kubeReserved {
+		cm.NodeConfig.KubeReserved[resourceName]  = resourceValue
+	}
+
 	cgroupConfig := &CgroupConfig{
-		// THIS ALREADY is  "root/kubepods"  --> "/kubepods"
+		// is  "root/kubepods"  --> "/kubepods"
 		Name:               cm.cgroupRoot,
 		ResourceParameters: getCgroupConfig(cm.getNodeAllocatableInternalAbsolute()),
 	}
@@ -367,22 +344,41 @@ func (cm *containerManagerImpl) UpdateResourceReservations(systemReserved, kubeR
 		Namespace: "",
 	}
 
-	// TODO: also need to update for alternative system reserved cgroup an alternative kube cgroup
-	// alternative kube-reserved: https://github.com/kubernetes/kubernetes/blob/66dc45a103bc9d75610d46a6b78e645bb2e6e4e3/pkg/kubelet/cm/node_container_manager_linux.go#L165
-	// System-reserved cgroup: https://github.com/kubernetes/kubernetes/blob/66dc45a103bc9d75610d46a6b78e645bb2e6e4e3/pkg/kubelet/cm/node_container_manager_linux.go#L142
-	// Also adds the `memoryMin` if the MemoryQOS is enabled
-	// https://github.com/kubernetes/kubernetes/blob/66dc45a103bc9d75610d46a6b78e645bb2e6e4e3/pkg/kubelet/cm/node_container_manager_linux.go#L185
-
 	fmt.Printf("DynamicResourceReservations: attempting to enforce updated Node Allocatable")
 	err := cm.cgroupManager.Update(cgroupConfig)
-	if err == nil {
-		cm.recorder.Event(nodeRef, v1.EventTypeNormal, events.SuccessfulNodeAllocatableEnforcement, "Updated Node Allocatable limit across pods")
-		return nil
-	}
-	message := fmt.Sprintf("Failed to update Node Allocatable Limits %q: %v", cm.cgroupRoot, err)
-	cm.recorder.Event(nodeRef, v1.EventTypeWarning, events.FailedNodeAllocatableEnforcement, message)
+	if err != nil {
+		message := fmt.Sprintf("Failed to update Node Allocatable Limits %q: %v", cm.cgroupRoot, err)
+		cm.recorder.Event(nodeRef, v1.EventTypeWarning, events.FailedNodeAllocatableEnforcement, message)
 
-	return fmt.Errorf(message)
+		return fmt.Errorf(message)
+	}
+	klog.V(2).InfoS("Successfully updated allocatable limit across pods", "cgroupName", cm.cgroupRoot)
+
+	if cm.EnforceNodeAllocatable.Has(kubetypes.SystemReservedEnforcementKey) {
+		klog.V(2).InfoS("Enforcing updated system reserved on cgroup", "cgroupName", cm.SystemReservedCgroupName, "limits", cm.SystemReserved)
+		if err := enforceExistingCgroup(cm.cgroupManager, cm.cgroupManager.CgroupName(cm.SystemReservedCgroupName), cm.SystemReserved); err != nil {
+			message := fmt.Sprintf("Failed to enforce updated System Reserved Cgroup Limits on %q: %v", cm.SystemReservedCgroupName, err)
+			cm.recorder.Event(nodeRef, v1.EventTypeWarning, events.FailedNodeAllocatableEnforcement, message)
+			return fmt.Errorf(message)
+		}
+		// prevent spamming events when resource reservations are frequently updated
+		klog.V(2).InfoS("Successfully enforced system reserved on cgroup", "cgroupName", cm.SystemReservedCgroupName)
+	}
+
+	// contains values from --kube-reserved-cgroup for podruntime.slice which is empty in Gardener case
+	if cm.EnforceNodeAllocatable.Has(kubetypes.KubeReservedEnforcementKey) {
+		klog.V(2).InfoS("Enforcing updated kube reserved on cgroup", "cgroupName", cm.KubeReservedCgroupName, "limits", cm.KubeReserved)
+		// this actually sets the kube-reserved on the kubepods cgroup
+		if err := enforceExistingCgroup(cm.cgroupManager, cm.cgroupManager.CgroupName(cm.KubeReservedCgroupName), cm.KubeReserved); err != nil {
+			message := fmt.Sprintf("Failed to enforce updated Kube Reserved Cgroup Limits on %q: %v", cm.KubeReservedCgroupName, err)
+			cm.recorder.Event(nodeRef, v1.EventTypeWarning, events.FailedNodeAllocatableEnforcement, message)
+			return fmt.Errorf(message)
+		}
+		// prevent spamming events when resource reservations are frequently updated
+		klog.V(2).InfoS("Successfully enforced updated kube reserved on cgroup", "cgroupName", cm.KubeReservedCgroupName)
+	}
+
+	return nil
 }
 
 // validateNodeAllocatable ensures that the user specified Node Allocatable Configuration doesn't reserve more than the node capacity.

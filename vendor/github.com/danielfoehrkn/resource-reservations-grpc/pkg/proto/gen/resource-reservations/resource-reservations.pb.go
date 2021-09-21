@@ -124,6 +124,99 @@ func (*UpdateResourceReservationsResponse) Descriptor() ([]byte, []int) {
 	return file_resource_reservations_proto_rawDescGZIP(), []int{1}
 }
 
+type GetResourceReservationsRequest struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+}
+
+func (x *GetResourceReservationsRequest) Reset() {
+	*x = GetResourceReservationsRequest{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_resource_reservations_proto_msgTypes[2]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *GetResourceReservationsRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*GetResourceReservationsRequest) ProtoMessage() {}
+
+func (x *GetResourceReservationsRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_resource_reservations_proto_msgTypes[2]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use GetResourceReservationsRequest.ProtoReflect.Descriptor instead.
+func (*GetResourceReservationsRequest) Descriptor() ([]byte, []int) {
+	return file_resource_reservations_proto_rawDescGZIP(), []int{2}
+}
+
+type GetResourceReservationsResponse struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	SystemReserved map[string]string `protobuf:"bytes,1,rep,name=SystemReserved,proto3" json:"SystemReserved,omitempty" protobuf_key:"bytes,1,opt,name=key,proto3" protobuf_val:"bytes,2,opt,name=value,proto3"`
+	KubeReserved   map[string]string `protobuf:"bytes,2,rep,name=KubeReserved,proto3" json:"KubeReserved,omitempty" protobuf_key:"bytes,1,opt,name=key,proto3" protobuf_val:"bytes,2,opt,name=value,proto3"`
+}
+
+func (x *GetResourceReservationsResponse) Reset() {
+	*x = GetResourceReservationsResponse{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_resource_reservations_proto_msgTypes[3]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *GetResourceReservationsResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*GetResourceReservationsResponse) ProtoMessage() {}
+
+func (x *GetResourceReservationsResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_resource_reservations_proto_msgTypes[3]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use GetResourceReservationsResponse.ProtoReflect.Descriptor instead.
+func (*GetResourceReservationsResponse) Descriptor() ([]byte, []int) {
+	return file_resource_reservations_proto_rawDescGZIP(), []int{3}
+}
+
+func (x *GetResourceReservationsResponse) GetSystemReserved() map[string]string {
+	if x != nil {
+		return x.SystemReserved
+	}
+	return nil
+}
+
+func (x *GetResourceReservationsResponse) GetKubeReserved() map[string]string {
+	if x != nil {
+		return x.KubeReserved
+	}
+	return nil
+}
+
 var File_resource_reservations_proto protoreflect.FileDescriptor
 
 var file_resource_reservations_proto_rawDesc = []byte{
@@ -154,16 +247,46 @@ var file_resource_reservations_proto_rawDesc = []byte{
 	0x52, 0x05, 0x76, 0x61, 0x6c, 0x75, 0x65, 0x3a, 0x02, 0x38, 0x01, 0x22, 0x24, 0x0a, 0x22, 0x55,
 	0x70, 0x64, 0x61, 0x74, 0x65, 0x52, 0x65, 0x73, 0x6f, 0x75, 0x72, 0x63, 0x65, 0x52, 0x65, 0x73,
 	0x65, 0x72, 0x76, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x73, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73,
-	0x65, 0x32, 0x85, 0x01, 0x0a, 0x14, 0x52, 0x65, 0x73, 0x6f, 0x75, 0x72, 0x63, 0x65, 0x52, 0x65,
-	0x73, 0x65, 0x72, 0x76, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x73, 0x12, 0x6d, 0x0a, 0x1a, 0x55, 0x70,
-	0x64, 0x61, 0x74, 0x65, 0x52, 0x65, 0x73, 0x6f, 0x75, 0x72, 0x63, 0x65, 0x52, 0x65, 0x73, 0x65,
-	0x72, 0x76, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x73, 0x12, 0x25, 0x2e, 0x76, 0x31, 0x2e, 0x55, 0x70,
-	0x64, 0x61, 0x74, 0x65, 0x52, 0x65, 0x73, 0x6f, 0x75, 0x72, 0x63, 0x65, 0x52, 0x65, 0x73, 0x65,
-	0x72, 0x76, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x73, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a,
-	0x26, 0x2e, 0x76, 0x31, 0x2e, 0x55, 0x70, 0x64, 0x61, 0x74, 0x65, 0x52, 0x65, 0x73, 0x6f, 0x75,
+	0x65, 0x22, 0x20, 0x0a, 0x1e, 0x47, 0x65, 0x74, 0x52, 0x65, 0x73, 0x6f, 0x75, 0x72, 0x63, 0x65,
+	0x52, 0x65, 0x73, 0x65, 0x72, 0x76, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x73, 0x52, 0x65, 0x71, 0x75,
+	0x65, 0x73, 0x74, 0x22, 0xe1, 0x02, 0x0a, 0x1f, 0x47, 0x65, 0x74, 0x52, 0x65, 0x73, 0x6f, 0x75,
 	0x72, 0x63, 0x65, 0x52, 0x65, 0x73, 0x65, 0x72, 0x76, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x73, 0x52,
-	0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22, 0x00, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f,
-	0x33,
+	0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x5f, 0x0a, 0x0e, 0x53, 0x79, 0x73, 0x74, 0x65,
+	0x6d, 0x52, 0x65, 0x73, 0x65, 0x72, 0x76, 0x65, 0x64, 0x18, 0x01, 0x20, 0x03, 0x28, 0x0b, 0x32,
+	0x37, 0x2e, 0x76, 0x31, 0x2e, 0x47, 0x65, 0x74, 0x52, 0x65, 0x73, 0x6f, 0x75, 0x72, 0x63, 0x65,
+	0x52, 0x65, 0x73, 0x65, 0x72, 0x76, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x73, 0x52, 0x65, 0x73, 0x70,
+	0x6f, 0x6e, 0x73, 0x65, 0x2e, 0x53, 0x79, 0x73, 0x74, 0x65, 0x6d, 0x52, 0x65, 0x73, 0x65, 0x72,
+	0x76, 0x65, 0x64, 0x45, 0x6e, 0x74, 0x72, 0x79, 0x52, 0x0e, 0x53, 0x79, 0x73, 0x74, 0x65, 0x6d,
+	0x52, 0x65, 0x73, 0x65, 0x72, 0x76, 0x65, 0x64, 0x12, 0x59, 0x0a, 0x0c, 0x4b, 0x75, 0x62, 0x65,
+	0x52, 0x65, 0x73, 0x65, 0x72, 0x76, 0x65, 0x64, 0x18, 0x02, 0x20, 0x03, 0x28, 0x0b, 0x32, 0x35,
+	0x2e, 0x76, 0x31, 0x2e, 0x47, 0x65, 0x74, 0x52, 0x65, 0x73, 0x6f, 0x75, 0x72, 0x63, 0x65, 0x52,
+	0x65, 0x73, 0x65, 0x72, 0x76, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x73, 0x52, 0x65, 0x73, 0x70, 0x6f,
+	0x6e, 0x73, 0x65, 0x2e, 0x4b, 0x75, 0x62, 0x65, 0x52, 0x65, 0x73, 0x65, 0x72, 0x76, 0x65, 0x64,
+	0x45, 0x6e, 0x74, 0x72, 0x79, 0x52, 0x0c, 0x4b, 0x75, 0x62, 0x65, 0x52, 0x65, 0x73, 0x65, 0x72,
+	0x76, 0x65, 0x64, 0x1a, 0x41, 0x0a, 0x13, 0x53, 0x79, 0x73, 0x74, 0x65, 0x6d, 0x52, 0x65, 0x73,
+	0x65, 0x72, 0x76, 0x65, 0x64, 0x45, 0x6e, 0x74, 0x72, 0x79, 0x12, 0x10, 0x0a, 0x03, 0x6b, 0x65,
+	0x79, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x03, 0x6b, 0x65, 0x79, 0x12, 0x14, 0x0a, 0x05,
+	0x76, 0x61, 0x6c, 0x75, 0x65, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x52, 0x05, 0x76, 0x61, 0x6c,
+	0x75, 0x65, 0x3a, 0x02, 0x38, 0x01, 0x1a, 0x3f, 0x0a, 0x11, 0x4b, 0x75, 0x62, 0x65, 0x52, 0x65,
+	0x73, 0x65, 0x72, 0x76, 0x65, 0x64, 0x45, 0x6e, 0x74, 0x72, 0x79, 0x12, 0x10, 0x0a, 0x03, 0x6b,
+	0x65, 0x79, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x03, 0x6b, 0x65, 0x79, 0x12, 0x14, 0x0a,
+	0x05, 0x76, 0x61, 0x6c, 0x75, 0x65, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x52, 0x05, 0x76, 0x61,
+	0x6c, 0x75, 0x65, 0x3a, 0x02, 0x38, 0x01, 0x32, 0xeb, 0x01, 0x0a, 0x14, 0x52, 0x65, 0x73, 0x6f,
+	0x75, 0x72, 0x63, 0x65, 0x52, 0x65, 0x73, 0x65, 0x72, 0x76, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x73,
+	0x12, 0x6d, 0x0a, 0x1a, 0x55, 0x70, 0x64, 0x61, 0x74, 0x65, 0x52, 0x65, 0x73, 0x6f, 0x75, 0x72,
+	0x63, 0x65, 0x52, 0x65, 0x73, 0x65, 0x72, 0x76, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x73, 0x12, 0x25,
+	0x2e, 0x76, 0x31, 0x2e, 0x55, 0x70, 0x64, 0x61, 0x74, 0x65, 0x52, 0x65, 0x73, 0x6f, 0x75, 0x72,
+	0x63, 0x65, 0x52, 0x65, 0x73, 0x65, 0x72, 0x76, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x73, 0x52, 0x65,
+	0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x26, 0x2e, 0x76, 0x31, 0x2e, 0x55, 0x70, 0x64, 0x61, 0x74,
+	0x65, 0x52, 0x65, 0x73, 0x6f, 0x75, 0x72, 0x63, 0x65, 0x52, 0x65, 0x73, 0x65, 0x72, 0x76, 0x61,
+	0x74, 0x69, 0x6f, 0x6e, 0x73, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22, 0x00, 0x12,
+	0x64, 0x0a, 0x17, 0x47, 0x65, 0x74, 0x52, 0x65, 0x73, 0x6f, 0x75, 0x72, 0x63, 0x65, 0x52, 0x65,
+	0x73, 0x65, 0x72, 0x76, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x73, 0x12, 0x22, 0x2e, 0x76, 0x31, 0x2e,
+	0x47, 0x65, 0x74, 0x52, 0x65, 0x73, 0x6f, 0x75, 0x72, 0x63, 0x65, 0x52, 0x65, 0x73, 0x65, 0x72,
+	0x76, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x73, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x23,
+	0x2e, 0x76, 0x31, 0x2e, 0x47, 0x65, 0x74, 0x52, 0x65, 0x73, 0x6f, 0x75, 0x72, 0x63, 0x65, 0x52,
+	0x65, 0x73, 0x65, 0x72, 0x76, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x73, 0x52, 0x65, 0x73, 0x70, 0x6f,
+	0x6e, 0x73, 0x65, 0x22, 0x00, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
 }
 
 var (
@@ -178,23 +301,31 @@ func file_resource_reservations_proto_rawDescGZIP() []byte {
 	return file_resource_reservations_proto_rawDescData
 }
 
-var file_resource_reservations_proto_msgTypes = make([]protoimpl.MessageInfo, 4)
+var file_resource_reservations_proto_msgTypes = make([]protoimpl.MessageInfo, 8)
 var file_resource_reservations_proto_goTypes = []interface{}{
 	(*UpdateResourceReservationsRequest)(nil),  // 0: v1.UpdateResourceReservationsRequest
 	(*UpdateResourceReservationsResponse)(nil), // 1: v1.UpdateResourceReservationsResponse
-	nil, // 2: v1.UpdateResourceReservationsRequest.SystemReservedEntry
-	nil, // 3: v1.UpdateResourceReservationsRequest.KubeReservedEntry
+	(*GetResourceReservationsRequest)(nil),     // 2: v1.GetResourceReservationsRequest
+	(*GetResourceReservationsResponse)(nil),    // 3: v1.GetResourceReservationsResponse
+	nil,                                        // 4: v1.UpdateResourceReservationsRequest.SystemReservedEntry
+	nil,                                        // 5: v1.UpdateResourceReservationsRequest.KubeReservedEntry
+	nil,                                        // 6: v1.GetResourceReservationsResponse.SystemReservedEntry
+	nil,                                        // 7: v1.GetResourceReservationsResponse.KubeReservedEntry
 }
 var file_resource_reservations_proto_depIdxs = []int32{
-	2, // 0: v1.UpdateResourceReservationsRequest.SystemReserved:type_name -> v1.UpdateResourceReservationsRequest.SystemReservedEntry
-	3, // 1: v1.UpdateResourceReservationsRequest.KubeReserved:type_name -> v1.UpdateResourceReservationsRequest.KubeReservedEntry
-	0, // 2: v1.ResourceReservations.UpdateResourceReservations:input_type -> v1.UpdateResourceReservationsRequest
-	1, // 3: v1.ResourceReservations.UpdateResourceReservations:output_type -> v1.UpdateResourceReservationsResponse
-	3, // [3:4] is the sub-list for method output_type
-	2, // [2:3] is the sub-list for method input_type
-	2, // [2:2] is the sub-list for extension type_name
-	2, // [2:2] is the sub-list for extension extendee
-	0, // [0:2] is the sub-list for field type_name
+	4, // 0: v1.UpdateResourceReservationsRequest.SystemReserved:type_name -> v1.UpdateResourceReservationsRequest.SystemReservedEntry
+	5, // 1: v1.UpdateResourceReservationsRequest.KubeReserved:type_name -> v1.UpdateResourceReservationsRequest.KubeReservedEntry
+	6, // 2: v1.GetResourceReservationsResponse.SystemReserved:type_name -> v1.GetResourceReservationsResponse.SystemReservedEntry
+	7, // 3: v1.GetResourceReservationsResponse.KubeReserved:type_name -> v1.GetResourceReservationsResponse.KubeReservedEntry
+	0, // 4: v1.ResourceReservations.UpdateResourceReservations:input_type -> v1.UpdateResourceReservationsRequest
+	2, // 5: v1.ResourceReservations.GetResourceReservations:input_type -> v1.GetResourceReservationsRequest
+	1, // 6: v1.ResourceReservations.UpdateResourceReservations:output_type -> v1.UpdateResourceReservationsResponse
+	3, // 7: v1.ResourceReservations.GetResourceReservations:output_type -> v1.GetResourceReservationsResponse
+	6, // [6:8] is the sub-list for method output_type
+	4, // [4:6] is the sub-list for method input_type
+	4, // [4:4] is the sub-list for extension type_name
+	4, // [4:4] is the sub-list for extension extendee
+	0, // [0:4] is the sub-list for field type_name
 }
 
 func init() { file_resource_reservations_proto_init() }
@@ -227,6 +358,30 @@ func file_resource_reservations_proto_init() {
 				return nil
 			}
 		}
+		file_resource_reservations_proto_msgTypes[2].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*GetResourceReservationsRequest); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_resource_reservations_proto_msgTypes[3].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*GetResourceReservationsResponse); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
 	}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
@@ -234,7 +389,7 @@ func file_resource_reservations_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: file_resource_reservations_proto_rawDesc,
 			NumEnums:      0,
-			NumMessages:   4,
+			NumMessages:   8,
 			NumExtensions: 0,
 			NumServices:   1,
 		},
@@ -261,6 +416,7 @@ const _ = grpc.SupportPackageIsVersion6
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://godoc.org/google.golang.org/grpc#ClientConn.NewStream.
 type ResourceReservationsClient interface {
 	UpdateResourceReservations(ctx context.Context, in *UpdateResourceReservationsRequest, opts ...grpc.CallOption) (*UpdateResourceReservationsResponse, error)
+	GetResourceReservations(ctx context.Context, in *GetResourceReservationsRequest, opts ...grpc.CallOption) (*GetResourceReservationsResponse, error)
 }
 
 type resourceReservationsClient struct {
@@ -280,9 +436,19 @@ func (c *resourceReservationsClient) UpdateResourceReservations(ctx context.Cont
 	return out, nil
 }
 
+func (c *resourceReservationsClient) GetResourceReservations(ctx context.Context, in *GetResourceReservationsRequest, opts ...grpc.CallOption) (*GetResourceReservationsResponse, error) {
+	out := new(GetResourceReservationsResponse)
+	err := c.cc.Invoke(ctx, "/v1.ResourceReservations/GetResourceReservations", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // ResourceReservationsServer is the server API for ResourceReservations service.
 type ResourceReservationsServer interface {
 	UpdateResourceReservations(context.Context, *UpdateResourceReservationsRequest) (*UpdateResourceReservationsResponse, error)
+	GetResourceReservations(context.Context, *GetResourceReservationsRequest) (*GetResourceReservationsResponse, error)
 }
 
 // UnimplementedResourceReservationsServer can be embedded to have forward compatible implementations.
@@ -291,6 +457,9 @@ type UnimplementedResourceReservationsServer struct {
 
 func (*UnimplementedResourceReservationsServer) UpdateResourceReservations(context.Context, *UpdateResourceReservationsRequest) (*UpdateResourceReservationsResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UpdateResourceReservations not implemented")
+}
+func (*UnimplementedResourceReservationsServer) GetResourceReservations(context.Context, *GetResourceReservationsRequest) (*GetResourceReservationsResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetResourceReservations not implemented")
 }
 
 func RegisterResourceReservationsServer(s *grpc.Server, srv ResourceReservationsServer) {
@@ -315,6 +484,24 @@ func _ResourceReservations_UpdateResourceReservations_Handler(srv interface{}, c
 	return interceptor(ctx, in, info, handler)
 }
 
+func _ResourceReservations_GetResourceReservations_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetResourceReservationsRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ResourceReservationsServer).GetResourceReservations(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/v1.ResourceReservations/GetResourceReservations",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ResourceReservationsServer).GetResourceReservations(ctx, req.(*GetResourceReservationsRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 var _ResourceReservations_serviceDesc = grpc.ServiceDesc{
 	ServiceName: "v1.ResourceReservations",
 	HandlerType: (*ResourceReservationsServer)(nil),
@@ -322,6 +509,10 @@ var _ResourceReservations_serviceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "UpdateResourceReservations",
 			Handler:    _ResourceReservations_UpdateResourceReservations_Handler,
+		},
+		{
+			MethodName: "GetResourceReservations",
+			Handler:    _ResourceReservations_GetResourceReservations_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

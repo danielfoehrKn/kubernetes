@@ -40,7 +40,7 @@ func NewV1ResourceReservationServer(getter ResourceReservationsGetter, updater R
 	}
 }
 
-func (s *ReservationsServer) UpdateResourceReservations(ctx context.Context, request *resourcereservationsv1alpha1.UpdateResourceReservationsRequest) (*resourcereservationsv1alpha1.UpdateResourceReservationsResponse, error) {
+func (s *ReservationsServer) UpdateResourceReservations(_ context.Context, request *resourcereservationsv1alpha1.UpdateResourceReservationsRequest) (*resourcereservationsv1alpha1.UpdateResourceReservationsResponse, error) {
 	log.Println(fmt.Sprintf("Request kube-reserved: %v", request.KubeReserved))
 	log.Println(fmt.Sprintf("Request system-reserved: %v", request.SystemReserved))
 
@@ -64,11 +64,21 @@ func (s *ReservationsServer) UpdateResourceReservations(ctx context.Context, req
 	return &resourcereservationsv1alpha1.UpdateResourceReservationsResponse{}, nil
 }
 
-func (s *ReservationsServer) GetResourceReservations(ctx context.Context, request *resourcereservationsv1alpha1.GetResourceReservationsRequest) (*resourcereservationsv1alpha1.GetResourceReservationsResponse, error) {
+func (s *ReservationsServer) GetResourceReservations(_ context.Context, _ *resourcereservationsv1alpha1.GetResourceReservationsRequest) (*resourcereservationsv1alpha1.GetResourceReservationsResponse, error) {
 	systemReserved, kubeReserved := s.getter.GetResourceReservations()
 
+	system := make(map[string]string, len(systemReserved))
+	for resourceName, resourceQuantity := range systemReserved {
+		system[resourceName.String()] = resourceQuantity.String()
+	}
+
+	kube :=make(map[string]string, len(kubeReserved))
+	for resourceName, resourceQuantity := range kubeReserved {
+		kube[resourceName.String()] = resourceQuantity.String()
+	}
+
 	return &resourcereservationsv1alpha1.GetResourceReservationsResponse{
-		SystemReserved: systemReserved,
-		KubeReserved:   kubeReserved,
+		SystemReserved: system,
+		KubeReserved:   kube,
 	}, nil
 }
